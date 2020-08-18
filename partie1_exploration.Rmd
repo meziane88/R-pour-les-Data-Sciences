@@ -1,0 +1,874 @@
+---
+title: "R POUR LES DATA SCIENCES"
+author: "SMAIL MEZIANE"
+date: "26/03/2020"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# PARTIE 1 : EXPLORATION 
+## 1 - Visualisation des donnée avec ggplot2 :
+### **Le cadre de données mpg**
+```{r}
+knitr::kable(ggplot2::mpg[1:10,],caption = "Exemple de kable de knitr." )
+```
+* displ, la taille du moteur d’une voiture, en litres  
+* hwy, l’efficacité énergétique de la voiture sur autoroute, en milles par gallon (mpg). 
+
+### **Création d’un graphe ggplot**
+```{r include=FALSE}
+library(tidyverse)
+```
+
+```{r}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+### **Un modèle de graphe**  
+`ggplot(data = <DONNÉES>) +`  
+`             <FONCTION_GÉOME>(mapping = aes(<LIAISONS>))`
+
+
+### **Liaisons d’esthétiques**
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, size = class))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
+```
+
+* Pour définir une esthétique manuellement, vous devez la passer en argu-ment à votre fonction de géome, donc en dehors de `aes()`.
+
+### **Facettes**
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2 )
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_grid(drv ~ cyl)
+```
+### **Objets géométriques** 
+Un géome est l’objet géométrique utilisé par un graphe pour représenter les données. Les gra-phes sont souvent décrits par le type de géome qu’ils utilisent.
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+```{r}
+ggplot(data = mpg) + geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = drv)) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+```
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+```
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(mapping = aes(linetype = drv))
+```
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE )
+```
+
+```{r}
+ggplot() + 
+  geom_point( data = mpg, mapping = aes(x = displ, y = hwy) ) + 
+  geom_smooth( data = mpg, mapping = aes(x = displ, y = hwy) )
+```  
+
+### **Transformations statistiques**
+```{r}
+diamonds
+```
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+```
+Les diagrammes en barres, histogrammes et polygones de fréquence répartissent vos don-nées en groupes, puis affichent le total de chaque groupe : le nombre de points qu’ils con-tiennent.
+```{r}
+ggplot(data = diamonds) + 
+  stat_count(mapping = aes(x = cut))
+```
+
+```{r}
+demo <- tribble( 
+  ~a, ~b, 
+  "bar_1", 20, 
+  "bar_2", 30, 
+  "bar_3", 40)
+ggplot(data = demo) + 
+  geom_bar( mapping = aes(x = a, y = b), stat = "identity" )
+```
+```{r}
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(x = cut, y =..prop.., group = 1))
+```
+
+
+```{r}
+ggplot(data = diamonds) + 
+  stat_summary( mapping = aes(x = cut, y = depth), fun.ymin = min, fun.ymax = max, fun.y = median )
+```
+### **Ajustements de position**
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, color = cut))
+```
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = cut))
+```
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity))
+```
+
+```{r}
+ggplot( data = diamonds, mapping = aes(x = cut, fill = clarity)) + 
+  geom_bar(alpha = 1/5, position = "identity")
+```
+
+```{r}
+ggplot( data = diamonds, mapping = aes(x = cut, color = clarity)) + 
+  geom_bar(fill = NA, position = "identity")
+```
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar( mapping = aes(x = cut, fill = clarity), position = "fill" )
+```
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar( mapping = aes(x = cut, fill = clarity), position = "dodge" )
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point( mapping = aes(x = displ, y = hwy), position = "jitter" )
+```
+
+Pour en savoir plus sur les ajustements de position, consultez la page d’aide associée à chacund’eux : `?position_dodge`,  `?position_fill`,  `?position_identity`,  `?position_jitter` et `?position_stack`.
+
+### **Systèmes de coordonnées**
+`coord_flip()` échange les axes x et y
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot()
+```
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot() + 
+  coord_flip()
+```
+`coord_quickmap()` définit le rapport hauteur/largeur adapté aux cartes
+```{r}
+nz <- map_data("nz")
+ggplot(nz, aes(long, lat, group = group)) + 
+  geom_polygon(fill = "white", color = "black")
+```
+
+```{r}
+ggplot(nz, aes(long, lat, group = group)) + 
+  geom_polygon(fill = "white", color = "black") + 
+  coord_quickmap()
+```
+
+`coord_polar()` utilise des coordonnées polaires
+```{r}
+bar <- ggplot(data = diamonds) + 
+  geom_bar( mapping = aes(x = cut, fill = cut), show.legend = FALSE, width = 1 ) + 
+  theme(aspect.ratio = 1) + 
+  labs(x = NULL, y = NULL)
+bar + coord_flip()
+bar + coord_polar()
+```
+### **La grammaire de graphiques multicouches**
+`ggplot(data = <DONNÉES>) +` 
+`<FONCTION_GÉOME>( mapping = aes(<LIAISONS>), stat = <STAT>, position = <POSITION> ) +` 
+`<FONCTION_COORDONNÉES> + `
+`<FONCTION_FACETTE>`
+
+La grammaire des graphiques est basée sur l’idée qu’il est possible dedécrire tout graphe de manière non ambiguë, comme la combinaison d’un jeu de données, ungéome, un ensemble de correspondances, une stat, un ajustement de position, un système decoordonnées et un schéma de facettage.
+
+## 2 - Méthodes de travail : bases
+
+## 3 - Transformation de donnéesavec dplyr
+```{r include=FALSE}
+library(nycflights13)
+library(tidyverse)
+```
+```{r}
+nycflights13::flights
+```
+
+
+### 3 - 1 - **Bases de dplyr**
+Nous allons apprendre dans ce chapitre les cinq fonctions élémentaires de dplyr, qui répondront à la la grande majorité de vos besoins en manipulation de données.  
+  
+  * Sélectionner des observations selon leurs valeurs : `filter()`.  
+  * Réordonner les rangées : `arrange()`.  
+  * Sélectionner des variables par leur nom : `select()`.  
+  * Créer de nouvelles variables en fonction de variables existantes : `mutate()`.  
+  * Regrouper plusieurs valeurs en un résumé unique : `summarize()`.  
+  
+  Toutes ces fonctions peuvent être utilisées en conjonction avec `group_by()`, qui modifie laportée de chaque fonction pour qu’elle n’opère que sur un groupe et non sur l’ensemble du jeude données.  
+  
+###  **Filtrer des rangées avec filter()**  
+
+  Nous pouvons par exemple sélectionner les vols du 1er janvier avec :  
+```{r}
+filter(flights, month == 1, day == 1)
+```
+  Le code suivant trouve tous les vols ayant décollé en novembre ou en décembre :  
+```{r}
+filter(flights, month == 11 | month == 12)
+```
+```{r}
+nov_dec <- filter(flights, month %in% c(11,12))
+nov_dec
+```
+```{r}
+filter(flights,!(arr_delay > 120 | dep_delay > 120))
+```
+  
+```{r}
+filter(flights, arr_delay <= 120, dep_delay <= 120)
+```
+  
+  `filter()` n’inclut que les rangées pour lesquelles sa condition est vraie, il exclut non seulement les valeurs fausses, mais aussi les valeurs NA. Si vous voulez les préserver, vous devez ledemander explicitement  
+
+### **Arranger des rangées avec arrange()**  
+  
+  `arrange()` fonctionne comme  `filter()`, mais au lieu de sélectionner des rangées, il modifieleur ordre.
+
+```{r}
+arrange(flights, year, month, day)
+```
+  
+```{r}
+arrange(flights, dep_delay)
+```
+
+```{r}
+arrange(flights, desc(dep_delay))
+```
+Les valeurs manquantes sont toujours placées à la fin  
+  
+### **Sélectionner des colonnes avec select()**  
+  
+```{r}
+select(flights, day, month, year)
+```
+```{r}
+select(flights, year:day)
+```
+```{r}
+select(flights, -(year:day))
+```
+  
+  Il existe un certain nombre de fonctions auxiliaires que vous pouvez utiliser au sein de `select()` :  
+  * `starts_with("abc")` sélectionne les noms commençant par « abc » ;  
+  * `ends_with("xyz")` sélectionne les noms se terminant par « xyz » ;  
+  * `contains("ijk")` sélectionne les noms contenant « ijk » ;  
+  * `matches("(.)\\1")` sélectionne les variables compatibles avec une expression régulière.Celle-ci  
+  sélectionne les variables contenant des caractères répétés.  
+  * `num_range("x", 1:3)` sélectionne x1, x2 et x3.
+  
+```{r}
+select(flights, time_hour, air_time, everything())
+```
+
+### **Ajouter de nouvelles variables avec mutate()**  
+  
+```{r}
+flights_sml <- select(flights, year:day, ends_with("delay"), distance, air_time)
+```
+```{r}
+mutate(flights_sml, gain = arr_delay - dep_delay, speed = distance / air_time * 60)
+```
+```{r}
+mutate(flights_sml, gain = arr_delay - dep_delay, hours = air_time / 60, gain_per_hour = gain / hours)
+```
+Si vous ne voulez conserver que les nouvelles variables, utilisez `transmute()`.  
+```{r}
+flights_sml1 <- transmute(flights, gain = arr_delay - dep_delay, hours = air_time / 60, gain_per_hour = gain / hours)
+```
+  
+  **Fonctions utiles pour les créations**
+  * Opérateurs arithmétiques : `+, -, *, /` et `^`  
+  * Arithmétique modulaire : `%/%` division entière `%%` reste  
+  * Logarithmes : `log()`, `log2()` et `log10()`  
+  * Décalages : `lead()` et `lag()` sont utilisés pour accéder aux valeurs qui précèdent ou qui  
+  suivent immédiatement.  
+```{r}
+(x <- 1:10)
+
+```
+```{r}
+lag(x)
+```
+```{r}
+lead(x)
+```
+  
+  * Agrégats cumulés et glissants : `cumsum(), cumprod(), cummin(), cummax()` et `cummean()`  
+```{r}
+cummean(x)
+```
+  
+  * Comparaisons logiques : `<, <=, >, >=` et `!=`  
+  * Classement : `min_rank()`, `desc(x)`, `row_number(),dense_rank(), percent_rank(), cume_dist()` et `ntile()`  
+
+
+### **Résumés groupés avec summarize()**  
+  
+```{r}
+summarize(flights, delay = mean(dep_delay, na.rm = TRUE))
+```
+  
+  
+  `summarize()` est surtout utile combiné à `group_by()`
+  
+```{r}
+(by_day <- group_by(flights, year, month, day))
+```
+```{r}
+summarize(by_day, delay = mean(dep_delay, na.rm = TRUE))
+```
+  
+### **Combiner plusieurs opérations avec un canal**  
+  
+```{r}
+by_dest <- group_by(flights, dest)
+```
+  
+```{r}
+delay <- summarize(by_dest, 
+                   count = n(), 
+                   dist = mean(distance, na.rm = TRUE), 
+                   delay = mean(arr_delay, na.rm = TRUE))
+delay
+```
+```{r}
+delay <- filter(delay, count > 20, dest!= "HNL")
+
+```
+```{r}
+ggplot(data = delay, mapping = aes(x = dist, y = delay)) + 
+  geom_point(aes(size = count), alpha = 1/3) + geom_smooth(se = FALSE)
+```
+
+  
+  
+  Le retard semble augmenter avec la distance jusqu’à 750 milles, puis diminuer. Peut-être que les trajets plus longs permettent de compenser le retard lors du vol ?  
+  **La préparation de ces données comporte trois étapes.**  
+  * Grouper les vols par destination.  
+  * Résumer pour calculer la distance, le retard moyen et le nombre de vols.  
+  * Filtrer pour supprimer les points perturbants, et l’aéroport d’Honolulu, presque deux foisplus loin que le second plus distant.  
+  
+  Il existe une autre façon d’aborder ce problème, laquelle consiste à utiliser les canaux (%>%):
+  
+```{r}
+delays <- flights %>% 
+  group_by(dest) %>% 
+  summarize(
+  count = n(), 
+  dist = mean(distance, na.rm = TRUE), 
+  delay = mean(arr_delay, na.rm = TRUE) 
+  ) %>% 
+  filter(count > 20, dest!= "HNL")
+```
+  
+```{r}
+delays
+```
+  
+  Le fonctionnement interne réalise les opérations suivantes : `x %>% f(y)` est transformé en `f(x, y)`, puis `x %>% f(y) %>% g(z)` est transformé en `g(f(x, y), z)`, etc.  
+  
+  
+  **Valeurs manquantes**  
+```{r}
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarize(mean = mean(dep_delay))
+```
+  
+```{r}
+flights %>% group_by(year, month, day) %>% summarize(mean = mean(dep_delay, na.rm = TRUE))
+```
+
+```{r}
+not_cancelled <- flights %>% filter(!is.na(dep_delay),!is.na(arr_delay))
+```
+```{r}
+not_cancelled  %>%  group_by(year, month, day) %>% summarize(mean = mean(dep_delay))
+```
+
+  
+  ### **Comptes**   
+  
+  Inclure un compte(`n()`) ou un compte de valeurs non manquantes (`sum(!is.na(x))`).  
+```{r}
+delays <- not_cancelled %>% group_by(tailnum) %>% summarize( delay = mean(arr_delay) )
+```
+```{r}
+ggplot(data = delays, mapping = aes(x = delay)) + 
+  geom_freqpoly(binwidth = 10)
+```
+  ♣
+```{r}
+delays <- not_cancelled %>% group_by(tailnum) %>% summarize( delay = mean(arr_delay, na.rm = TRUE), n = n() )
+```
+```{r}
+ggplot(data = delays, mapping = aes(x = n, y = delay)) + 
+  geom_point(alpha = 1/10)
+```
+
+```{r}
+delays %>% filter(n > 25) %>% 
+  ggplot(mapping = aes(x = n, y = delay)) + 
+  geom_point(alpha = 1/10)
+```
+
+  
+  ### **Fonctions utiles pour les résumés**
+  
+  * Mesures de position : `mean()`, `mediane()`, 
+```{r}
+not_cancelled %>% group_by(year, month, day) %>% summarize(avg_delay1 = mean(arr_delay), avg_delay2 = mean(arr_delay[arr_delay > 0]) )
+```
+  
+  
+  * Mesures de dispersion : `sd(x)` (standard deviation), `IQR(x)` (interquartile range) et `mad(x)` (median absolute deviation)  
+```{r}
+# Pourquoi la distance est-elle plus variable vers certaines destinations que vers d’autres ?
+not_cancelled %>% group_by(dest) %>% summarize(distance_sd = sd(distance)) %>% arrange(desc(distance_sd))
+```
+  
+  * Mesures de rang : `min(x)`, `quantile(x, 0.25)` et `max(x)`  
+```{r}
+# Quand les premiers et derniers vols décollent-ils chaque jour ?
+not_cancelled %>% group_by(year, month, day) %>% summarize(first = min(dep_time), last = max(dep_time) )
+```
+  
+  
+  * Mesures de position : `first(x)`, `nth(x, 2)` et `last (x)`  
+```{r}
+not_cancelled %>% group_by(year, month, day) %>% summarize( first_dep = first(dep_time), last_dep = last(dep_time) )
+```
+  
+  * Compte : `n()` : renvoie la taille de groupe courant.  `sum(!is.na(x))`: compter uniquement les valeurs non manquantes.   
+  `n_distinct(x)`: pour compter le nombre de valeurs uniques.  
+  
+```{r}
+# Quelles destinations présentent le plus de compagnies ?
+not_cancelled %>% group_by(dest) %>% summarize(carriers = n_distinct(carrier)) %>% arrange(desc(carriers))
+```
+  
+```{r}
+not_cancelled %>% count(dest)
+```
+
+```{r}
+not_cancelled %>% count(tailnum, wt = distance)
+```
+  
+  
+###**Groupement par variables multiples**  
+  
+  Lorsque vous groupez selon plusieurs variables, chaque résumé retire un niveau du groupe-ment. Vous pouvez ainsi facilement « cumuler » un jeu de données :
+  
+```{r}
+daily <- group_by(flights, year, month, day)
+(per_day <- summarize(daily, flights = n()))
+```
+
+```{r}
+(per_month <- summarize(per_day, flights = sum(flights)))
+```
+
+```{r}
+(pe_year <- summarise(per_month, flights = sum(flights)))
+```
+
+###**Dégroupement**  
+
+`ungroup`:supprimer un groupement et revenir à des opérations sur les données nongroupées.  
+
+```{r}
+daily %>%
+  ungroup() %>% # les données ne sont plus groupées par date
+  summarise(filights = n()) # tous les vols
+```
+
+###**Mutations et filtres groupés**  
+
+
+Le groupement est particulièrement utile en conjonction avec `summarize()`, mais vouspouvez aussi effectuer des opérations intéressantes avec `mutate()` et `filter()`.  
+  
+  *Trouver les pires membres de chaque groupe
+  
+```{r}
+flights_sml %>% 
+  group_by(year, month, day) %>% 
+  filter(rank(desc(arr_delay)) < 10)
+```
+
+  
+  *Trouver tous les groupes dépassant un seuil  
+  
+```{r}
+(popular_dests <- flights%>%
+  group_by(dest) %>% 
+  filter(n() > 365))
+```
+  *Standardiser pour calculer des métriques par groupe  
+```{r}
+popular_dests %>% 
+  filter(arr_delay > 0) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+```
+# 4 - Méthodes de travail : scripts  
+# 5 - Analyse exploratoire de données  
+  L’AED est un cycle itératif : 
+  * Génération de questions sur vos données.  
+  * Recherche de réponses en visualisant, transformant et modélisant les données.  
+  * Utilisation des nouveaux éléments pour affiner les questions et/ou en générer de nouvelles.  
+
+```{r}
+library(tidyverse)
+```
+  
+  Il n’y a pas de règle fixe établissant les questions à poser pour guider votre recherche. Cependant, deux types de questions seront toujours utiles pour mieux comprendre vos données.
+  Elles peuvent être formulées sommairement ainsi.  
+  * Quel type de variation se présente dans mes variables ?
+  * Quel type de covariation se présente entre mes variables ?  
+  
+## 5 - 1 - Variation
+### 5 - 1 - 1 Visualisation des distributions
+Pour examiner la distribution d’une variable catégorielle, utilisez undiagramme en barres :  
+```{r}
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(x = cut))
+```
+```{r}
+diamonds %>% 
+  count(cut)
+```
+Pour examiner la distribu-tion d’une variable continue, utilisez un histogramme :  
+```{r}
+ggplot(data = diamonds)+
+  geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
+```
+```{r}
+diamonds %>% 
+  count(cut_width(carat, 0.5))
+```
+les limites gauche et droite du conteneur  
+```{r}
+smaller <- diamonds %>% 
+  filter(carat < 3)
+```
+
+
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat))+
+  geom_histogram(binwidth = 0.1)
+```
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat, color = cut))+
+  geom_freqpoly(binwidth = 0.1)
+```
+### 5 - 1 - 2 Valeurs typiques  
+
+prêtez attention à tout ce qui sort de l’ordinaire :
+  * Quelles valeurs sont les plus courantes ? Pourquoi ?  
+  * Quelles valeurs sont rares ? Pourquoi ? Cela est-il conforme à ce que vous supposiez ?  
+  * Pouvez-vous discerner des tendances atypiques ? Qu’est-ce qui pourrait les expliquer ?  
+L’histogramme suivant révèle plusieurs questions intéressantes :  
+  * Pourquoi y a-t-il plus de diamants dont le carat est une valeur entière ou une fraction simple ?  
+  * Pourquoi y a-t-il plus de diamants vers la droite de chaque pic que vers la gauche ?  
+  * Pourquoi n’y a-t-il pas de diamants de plus de 3 carats ?  
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat))+
+  geom_histogram(binwidth = 0.01)
+```
+En général, des regroupements de valeurs similaires suggèrent que vos données contiennent des sous-groupes. Pour comprendre les sous-groupes, demandez-vous :  
+  * En quoi les observations au sein de chaque groupe sont-elles similaires ?  
+  * En quoi les observations de groupes différents varient-elles ?  
+  * Comment pouvez-vous expliquer ou décrire les regroupements ?  
+  * Pourquoi l’apparence des regroupements peut-elle être trompeuse ?  
+Parmi les questions précédentes, beaucoup vous conduiront à explorer une relation entre desvariables.  
+
+### 5 - 1 - 3 Valeurs anormales  
+Les anomalies sont des observations qui sortent de l’ordinaire ; des points de données qui ne semblent pas correspondre à la tendance générale. Parfois, elles ne sont rien d’autre que deserreurs lors de la saisie des données, mais d’autres fois elles seront la clé d’une importante découverte.  
+
+```{r}
+ggplot(data =  diamonds) +
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5)
+```
+`coord_cartesian()` : rendre les valeurs anormales plus visible en zoomant sur l'axe :  
+  * des y avec l'argument `ylim` 
+  * des x avec l'argument `xlim`  
+ `ylim()` et `ylim`: deux fonctions de ggplot2 qui surppriment les valeurs en dehors des limites.
+```{r}
+ggplot(data = diamonds)+
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5) +
+  coord_cartesian(ylim = c(0, 50))
+```
+```{r}
+unusual <- diamonds %>% 
+  filter(y < 3 | y > 20) %>% 
+  arrange(y)
+ggplot(data = unusual)+
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5)
+```
+  
+  La variable y mesure une des trois dimensions des diamants, en millimètres. Elle ne peut donc pas être nulle ; les valeurs de 0 sont nécessairement des erreurs. Nous pouvons également supposer que les mesures de 32 ou 59 mm sont très improbables : des diamants de cette taille devraient coûter plusieurs centaines de milliers de dollars.
+## 5 - 2 - Valeurs manquantes  
+Si vous avez rencontré des *valeurs anormales* dans votre jeu de données et souhaitez lesignorer et continuer votre analyse, vous avez deux options :  
+  **Supprimer entièrement la colonne contenant les valeurs :** pas recommander
+```{r}
+diamonds2 <- diamonds %>% 
+  filter(between(y, 3, 20))
+```
+
+  **Remplacer les valeurs anormales par des valeurs manquantes :** Recommander
+```{r}
+diamonds2 <- diamonds %>% 
+  mutate(y = ifelse(y < 3 | y > 20, NA, y))
+```
+```{r}
+ggplot(data = diamonds2, mapping = aes(x = x, y = y))+
+  geom_point()
+```
+```{r}
+ggplot(data = diamonds2, mapping = aes(x = x, y = y))+# ggplot supprime les NA sans 
+  geom_point(na.rm = TRUE)                            # l'affichage de messate d'erreur
+```
+
+Dans certains cas, vous voudrez comprendre la différence entre les observations ayant des valeurs manquantes et les observations complètes.
+```{r}
+nycflights13::flights %>% 
+  mutate(cancelled = is.na(dep_time),
+         sched_hour = sched_dep_time %/% 100, 
+         sched_min = sched_dep_time %% 100, 
+         sched_dep_time = sched_hour + sched_min / 60) %>% 
+  ggplot(mapping = aes(x = sched_dep_time))+
+  geom_freqpoly(aes(color = cancelled), binwidth = 1/4)
+  
+```
+## 5 - 3 Covariation  
+La _covariation_ est la tendance qu’ont deux variables ou plus devarier conjointement d’une manière corrélée.  
+### 5 - 3 - 1 Une variable catégorielle et une variable continue  
+```{r}
+ggplot(data =  diamonds, mapping = aes(x = price))+
+  geom_freqpoly(mapping = aes(color = cut), binwidth = 500)
+```
+
+Il est difficile de voir la différence de distribution, car les comptes totaux varient trop :
+```{r}
+ggplot(data = diamonds, mapping = aes(x = cut))+
+  geom_bar()
+```
+Pour faciliter la comparaison, nous pouvons modifier ce qui est affiché sur l’axe y. Au lieu d’afficher le compte, nous allons afficher la densité (_density_),  
+```{r}
+ggplot(data = diamonds, mapping = aes(x = price, y =..density..))+
+  geom_freqpoly(mapping = aes(color = cut), binwidth = 500)
+```
+Ce graphe est assez surprenant : il semble que les diamants de qualité « fair » (la qualité la plus faible) aient le prix moyen le plus élevé.  
+
+```{r}
+ggplot(data = diamonds, mapping = aes(x = cut, y = price))+
+  geom_boxplot()
+```
+  
+  `reorder()`: permet de réordonner les valeurs d'une variable catégorielle.  
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy))+
+  geom_boxplot()
+```
+```{r}
+ggplot(data = mpg)+
+  geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y = hwy))
+```
+  
+  Lorsque les noms de vos variables sont trop longs
+  
+```{r}
+ggplot(data = mpg)+
+  geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y = hwy))+
+  coord_flip()
+```
+### 5 - 3 - 2 Deux variables catégorielles  
+Pour visualiser la covariation entre des variables catégorielles, vous devrez compter le nombred’observations pour chaque combinaison.  
+```{r}
+ggplot(data = diamonds)+
+  geom_count(mapping = aes(x = cut, y = color))
+```
+```{r}
+diamonds %>% 
+  count(cut, color)
+```
+
+```{r}
+diamonds %>%
+  count(cut,color) %>% 
+  ggplot(mapping = aes(x = cut, y = color))+
+  geom_tile(mapping = aes(fill = n))
+```
+### 5 - 3 - 3 Deux variables continues  
+```{r}
+ggplot(data = diamonds)+
+  geom_point(mapping = aes(x = carat, y = price))
+```
+  
+  L’utilité des diagrammes de dispersion se réduit lorsque la taille de votre jeu de données augmente, car les points se « suraffichent » et génèrent des zones noires uniformes.  
+```{r}
+ggplot(data = diamonds)+
+  geom_point(mapping = aes(x = carat, y = price), alpha = 1/100)
+```
+  
+```{r}
+ggplot(data = smaller)+
+  geom_bin2d(mapping = aes(x = carat, y = price))
+```
+  
+```{r}
+ggplot(data = smaller)+
+  geom_hex(mapping = aes(x = carat, y = price))
+```
+  
+  Il est également possible de mettre une des variables continues en conteneurs.  
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat, y = price))+
+  geom_boxplot(mapping = aes(group = cut_width(price, 1000)))
+```
+  
+  Les diagrammes en boîtes ont une apparence similaire quel que soit le nombre d’observations. 
+  Il est toutefois possible de rendre la largeur des boîtes proportionnelles à leur nombre de points en utilisant `varwidth = TRUE`.  
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat, y = price))+
+  geom_boxplot(mapping = aes(group = cut_number(price, 100)))
+```
+  
+## 5 - 4 - Tendances et modèles  
+Si une relation systématique existe entre deux variables, elle apparaîtra comme une tendance dans vos données.Dans ce cas, posez-vous les questions suivantes :  
+  * La tendance peut-elle n’être qu’une coïncidence ?  
+  * Comment pouvez-vous décrire la relation qu’elle suggère ?  
+  * Cette relation semble-t-elle forte ?  
+  * Quelles autres variables pourraient l’affecter ?  
+  * La relation change-t-elle si vous observez séparément des sous-groupes de vos données ?  
+  
+  Le code suivant élabore un modèle prédisant leprix à partir du carat, puis calcule la différence résiduelle. Celle-ci nous donne une indicationsur le prix du diamant une fois l’effet du carat supprimé :  
+    
+    
+    
+    
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+

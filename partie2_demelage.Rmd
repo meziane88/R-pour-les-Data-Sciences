@@ -1,0 +1,538 @@
+--- 
+title: 'PARTIE 2 : Le Démêlage'
+author: "SMAIL MEZIANE"
+date: "21/04/2020"
+output:
+  word_document: default
+  html_document: default
+---
+```{r include=FALSE}
+library(tidyverse)
+```
+# 1 - Les tibbles :  
+## 1 - 1 - Création de tibbles :  
+`as_tibble()`: transforme un cadre de données normal en tibble.  
+```{r}
+as_tibble(iris)
+```
+`tibble()`: crée un tible à partir de vecteurs individuels.  
+```{r}
+tibble(
+  x = 1:5, 
+  y = 1, 
+  z = x^2 + y
+)
+```
+`tribble()`: tibble transposé conçu pour la saisie de données dans le code;  
+```{r}
+tribble(
+  ~x , ~y, ~z,
+  "a", 2, 3.6,
+  "b", 1, 8.5
+)
+```
+## 1 - 2 - Comparaison entre tibble et data.frame : 
+`tibble()` fait beaucoup moins`data.frame` : il ne change jamais le type des entrées (il ne convertit donc pas les chaînes en facteurs), ne change jamais le nom des variables et ne crée jamais de noms de rangées.  
+### 1 - 2 - 1 - Affichage :  
+Les tibbles ont une méthode d’affichage spécifique, qui affiche uniquement les 10 premièresrangées et seulement autant de colonnes que ce que l’écran peut contenir.  
+En plus de son nom, chaque colonne indique sontype.  
+```{r}
+tibble( 
+  a = lubridate::now() + runif(1e3) * 86400, 
+  b = lubridate::today() + runif(1e3) * 30, 
+  c = 1:1e3, d = runif(1e3), 
+  e = sample(letters, 1e3, replace = TRUE)
+  )
+```
+`n = ` : détermine le nombre de lignes, `width = inf`: affiche toutes les colonnes. 
+```{r}
+nycflights13::flights %>% print(n = 10, width = Inf)
+```
+### 1 - 2 - 2 - Indiçage :  
+```{r}
+(df <- tibble(
+  x = runif(5),
+  y = rnorm(5)
+))
+```
+__Extraction par nom__
+```{r}
+df$x
+```
+```{r}
+df[["x"]]
+```
+__Extraction par position__  
+```{r}
+df[[1]]
+```
+__Pour les utiliser dans un canal__  
+```{r}
+df %>% .$x
+```
+```{r}
+df %>% .[["x"]]
+```
+## 1 - 3 - Interaction avec du code plus ancien :  
+`as.data.frame()`: convertir un tibble en data.frame.  
+```{r}
+class(as.data.frame(df))
+```
+```{r}
+class(df)
+```
+# 2 - Importation de données avec readr :  
+* `read_csv()`: lit des fichiers qui contiennent des valeurs séparées par des virgules (comma-separated values).  
+* `read_csv2()`: lit des fichiers dont les valeurs sont séparées par des point-virgules (plus pratiques lorsque la virgule est utilisée comme séparateur décimal).  
+* `read_tsv` : lit des fichiers dont les valeurs sont séparées par des tabulations.  
+* `read_delim()` : lit des fichiers à séparateur quelconque.
+* `read_fwf()`: lit des fichiers à largeur fixe. Vous pouvez définir les champs, soit par leur largeur avec `fwf_widths()`, soit par leur position avec `fwf_positions()`.  
+* `read_table()`: lit une variante courante des fichiers à largeur fixe dans laquelle les colonnes sont séparées par des espaces.  
+* `read_log()`: lit des fichiers de log de style Apache.
+Ces fonctions ont toutes une syntaxe similaire.  
+```{r}
+CSV_sample <- read_csv("D:/Etude/R/Nouveau dossier/CSV_sample.csv")
+```
+```{r}
+View(CSV_sample)
+```
+```{r}
+read_csv("a,b,c
+         1,2,3
+         4,5,6")
+```
+Dans les deux cas, `read_csv()` utilise la première ligne des données pour les noms decolonnes.  
+`skip =`: supprime les ligne des métadonnées.  
+
+```{r}
+read_csv("Première ligne de métadonnées 
+         Seconde ligne de métadonnées 
+         x,y,z 
+         1,2,3", skip = 2)
+```
+`comment = `: indique le symbole qui précède les lignes de commentaire.  
+
+```{r}
+read_csv("# Un commentaire à ignorer 
+         x,y,z
+         1,2,3", comment = "#")
+```
+`col_names = FALSE`: pour indiquer à `read_csv()` de ne pas traiter la première rangée comme un entête et de nommer les colonnes séquentiellement de X1 à Xn.  
+```{r}
+read_csv("1,2,3\n4,5,6", col_names = FALSE)
+```
+`col_names` un vecteur de caractères quisera utilisé pour les noms de colonnes;  
+```{r}
+read_csv("1,2,3\n4,5,6", col_names = c("x", "y", "z"))
+```
+`na = `: indique la ou les valeur(s) utilisée(s) pour représenter des valeurs manquantes dans votre fichier.   
+```{r}
+read_csv("a,b,c\n1,2,.", na = ".")
+```
+## 2 - 1 - Lecture d’un vecteur :  
+`parse_*()`: ces fonctions prennent en entrée un vecteur de caractères et renvoient un vecteur de valeurs spécialisées : logiques, entières, dates...  
+```{r}
+str(parse_logical(c("TRUE", "FALSE", "NA")))
+```
+```{r}
+parse_integer(c("1", "231", ".", "456"), na = ".")
+```
+```{r}
+x <- parse_integer(c("123", "345", "abc", "123.45"))
+```
+```{r}
+x
+```
+```{r}
+problems(x)
+```
+## 2 - 2 - Nombres :  
+```{r}
+parse_double("1.23")
+```
+```{r}
+parse_double("1,23", locale = locale(decimal_mark = ","))
+```
+```{r}
+parse_number("$100")
+```
+```{r}
+parse_number("10%")
+```
+```{r}
+parse_number("It cost $123.45")
+```
+```{r}
+# Aux États-Unis
+parse_number("$123,456,789")
+```
+```{r}
+# En France 
+parse_number( "123.456.789", locale = locale(grouping_mark = "."))
+```
+```{r}
+# En Suisse
+parse_number( "123’456’789", locale = locale(grouping_mark = "’"))
+```
+## 2 - 2 - Chaînes :  
+```{r}
+x1 <- "El Ni\xf1o was particularly bad this year"
+```
+```{r}
+x2 <- "\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd"
+```
+```{r}
+parse_character(x1, locale = locale(encoding = "Latin1"))
+```
+```{r}
+parse_character(x2, locale = locale(encoding = "Shift-JIS"))
+```
+__Comment savoir quel est l’encodage utilisé ?__  
+```{r}
+guess_encoding(charToRaw(x1))
+```
+```{r}
+guess_encoding(charToRaw(x2))
+```
+## 2 - 3 - Facteurs :  
+```{r}
+fruit <- c("pomme", "banane")
+parse_factor(c("pomme", "banane", "bananane"), levels = fruit)
+```
+## 2 - 4 - Dates, dates-heures et heures :   
+```{r}
+parse_datetime("2010-10-01T2010")
+```
+* Si l’heure n’est pas précisée, elle sera définie à minuit.  
+```{r}
+parse_datetime("20101010")
+```
+```{r}
+parse_date("2010-10-01")
+```
+```{r}
+parse_time("01:10 am")
+```
+```{r}
+parse_time("20:10:01")
+```
+```{r}
+parse_time("01:10 pm")
+```
+```{r}
+parse_date("01/02/15", "%m/%d/%y")
+```
+```{r}
+parse_date("01/02/15", "%d/%m/%y")
+```
+```{r}
+parse_date("01/02/15", "%y/%m/%d")
+```
+```{r}
+date_names_langs()# des langues
+```
+```{r}
+parse_date("1 janvier 2015", "%d %B %Y", locale = locale("fr"))
+```
+* Année  
+  `%Y` : 4 chiffres  
+  `%y` : 2 chiffres ; 00-69 → 2000-2069, 70-99 → 1970-1999.  
+* Mois  
+  `%m` : 2 chiffres  
+  `%b` : nom abrégé, comme Jan  
+  `%B` : nom complet, comme January  
+* Jour  
+  `%d` : 2 chiffres  
+  `%e` : espace optionnel avant les chiffres
+  `%H` : format 0-23 heures   
+  `%I` : 0-12, doit être utilisé avec `%p`  
+  `%p` : indicateur am/pm  
+  `%M` : minutes  
+  `%S` : secondes entières  
+  `%OS`: secondes réelles  
+  `%Z` : fuseau horaire  
+  `%z` : un décalage par rapport à la zone UTC, par exemple +0800
+* Valeurs non numériques  
+  `%.` : ignore un caractère non numérique  
+  `%*` : ignore une suite de caractères non numériques
+
+## 2 - 5 - Lecture d’un fichier :  
+`readr`: il lit les 1 000 premières rangées et utilise une estimation (assez prudente) pour en déterminer le type.  
+`guess_parser()` : renverra le type estimé par `readr`  
+```{r}
+guess_parser("2010-10-01")
+```
+## 2 - 6 - Problèmes :  
+```{r}
+challenge <- read_csv(readr_example("challenge.csv"))
+```
+```{r}
+problems(challenge)
+```
+```{r}
+challenge <- read_csv( readr_example("challenge.csv"),
+                       col_types = cols( 
+                         x = col_integer(),
+                         y = col_character() ))
+```
+```{r}
+challenge <- read_csv( readr_example("challenge.csv"),
+                       col_types = cols( x = col_double(), y = col_character() ))
+```
+```{r}
+problems(challenge)
+```
+```{r}
+tail(challenge)
+```
+```{r}
+challenge <- read_csv( readr_example("challenge.csv"), 
+                       col_types = cols( 
+                         x = col_double(), 
+                         y = col_date() )
+                       )
+```
+
+
+```{r}
+tail(challenge)
+```
+```{r}
+challenge2 <- read_csv( readr_example("challenge.csv"), 
+                        guess_max = 1001 )
+```
+```{r}
+challenge2 <- read_csv(readr_example("challenge.csv"), 
+                       col_types = cols(.default = col_character()))
+```
+
+
+```{r}
+challenge2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 3 - Rangement de données avec tidyr :  
+Trois règles interdépendantes déterminent si un jeu de données est rangé.  
+* Chaque variable doit avoir sa propre colonne.  
+* Chaque observation doit avoir sa propre rangée.  
+* Chaque valeur doit avoir sa propre cellule.  
+```{r}
+table1
+```
+```{r}
+# Calcul du taux par 10000 
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+```
+```{r}
+# Calcul des cas par an 
+table1 %>% 
+  count(year, wt = cases)
+```
+```{r}
+# visualiser des changement au cours de temps
+ggplot(table1, aes(year, cases))+
+  geom_line(aes(group = country), color = "grey50")+
+  geom_point(aes(color = country))
+```
+## 3 - 1 - Répartition et collecte :  
+
+  * La première étape est toujours decomprendre quels éléments constituent les variables et les observations.  
+  * Laseconde étape consiste à résoudre l’un des deux problèmes suivants fréquemment rencontrés :  
+    * une variable peut être répartie sur plusieurs colonnes ;  
+    * une observation peut être répartie sur plusieurs rangées.  
+    
+### 3 - 1 - 1 - Collecter :  
+  
+  __Problème :__ avoir un jeu de données dans lequel certains noms de colonnes ne sont pas des noms des variables, mais les valeurs d’une variable.  
+```{r}
+table4a # les noms de colonnes 1999 et 2000 sont des valeurs de la variable year
+```
+Pour résoudre ce problème, il nous faut collecter ces colonnes en une nouvelle paire de variables, nous avons besoins de trois paramètres :   
+  * L’ensemble des colonnes représentant des valeurs au lieu de variables.  
+  * Le nom de la variable dont les valeurs constituent les noms de colonnes. Elle sera appelée (`key`) ;  
+  * Le nom de la variable dont les valeurs sont réparties sur les cellules. Elle sera appelée (`value`).  
+  
+```{r}
+table4a %>% 
+  gather('1999', '2000', key = "year", value = "cases")
+```
+
+```{r}
+table4b
+```
+
+```{r}
+table4b %>% 
+  gather('1999', '2000', key = "year", value = "population")
+```
+`left_join`: combine des tableaux en un cadre unique. (chapitre suivant)
+
+```{r}
+tydi4a <- table4a %>%
+  gather('1999', '2000', key = "year", value = "cases")
+```
+```{r}
+tydi4b <- table4b %>% 
+  gather('1999', '2000', key = "year", value = "populatin")
+```
+
+
+```{r}
+left_join(tydi4a, tydi4b)
+```
+
+### 3 - 1 - 2 - Répartition :  
+__Problème :__ avoir un jeu de données dans lequel une observation est dispersée sur plusieurs rangées.  
+
+```{r}
+table2# chaque observation (un pays, une année) estrépartie sur deux colonnes
+```
+
+
+
+```{r}
+spread(table2, key = "type", value = "count")
+```
+
+
+## 3 - 2 - Séparation et extraction :  
+```{r}
+table3
+```
+### 3 - 2 - 1 - Séparation :  
+`separate()` :  décompose une colonne en plusieurs éléments, en plaçant entre les occurrences un caractère de séparation.  
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+```
+`separate()`: reconnaît en tant qu’élément de séparation tout caractère non alpha-numérique
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+```  
+`separate()` : il laisse le type de la colonne tel quel. pour les convertir on utilise l'option `convert = True`.  
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE)
+```
+```{r}
+table3 %>% 
+  separate(year, into = c("centry", "year"), sep = 2)
+```
+
+### 3 - 2 - 2 - Unification :  
+`unite()` : il combine plusieurs colonnes en une seule.  
+```{r}
+table5
+```
+```{r}
+table5 %>% 
+  unite(new, century, year)
+```
+
+
+```{r}
+table5 %>% 
+  unite(new, century, year, sep = "")
+```
+
+## 3 - 3 - Valeurs manquantes :  
+```{r}
+(stocks <- tibble( year = c(2015, 2015, 2015, 2015, 2016, 2016, 2016), 
+                  qtr = c( 1, 2, 3, 4, 2, 3, 4), 
+                  return = c(1.88, 0.59, 0.35, NA, 0.92, 0.17, 2.66)))
+```
+Deux valeurs manquates :  
+*la valeur du 4ième trimestre de 2015, marqué NA.  
+*la valeur du 1ier trimestre de 2016, reellment manquantes,  
+û
+```{r}
+stocks %>% 
+  spread(year, return)
+```
+```{r}
+stocks %>% 
+  spread(year, return) %>% 
+  gather(year, return, '2015', '2016', na.rm = FALSE)
+```
+```{r}
+stocks %>% 
+  spread(year, return) %>%
+  gather(year, return,'2015','2016', na.rm = TRUE)
+```
+```{r}
+stocks %>% 
+  complete(year, qtr)
+```
+```{r}
+stocks %>%
+  complete(qtr, year)
+```
+
+```{r}
+(treatment <- tribble( ~ person, ~ treatment, ~response, 
+                      "Derrick Whitmore", 1, 7, 
+                      NA, 2, 10, 
+                      NA, 3, 9, 
+                      "Katherine Burke", 1, 4))
+```
+```{r}
+treatment %>%
+  fill(person)
+```
+
+## 3 - 4 - Étude de cas :  
+
+# 4 - Données relationnelles avec dplyr :  
+```{r include=FALSE}
+library(nycflights13)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
